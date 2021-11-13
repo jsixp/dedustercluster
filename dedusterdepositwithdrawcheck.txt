@@ -1,0 +1,59 @@
+# bot.py
+import os
+import sqlite3
+import discord
+import time
+from requests import get
+from random import randrange, choice, randint
+from datetime import datetime
+import pytz
+import asyncio
+import re
+conn = sqlite3.connect("database.db")
+c = conn.cursor()
+TOKEN = ('MjAyMzAyODIxOTg5NzQ0NjQx.V4SHLw.ywjIYXKL0Kct4EieqzQS1zbZbmU')
+
+client = discord.Client()
+credits = 0
+depositchannel = client.get_channel(908852595525820426)
+
+@client.event
+async def on_ready():
+    print(f'{client.user} has connected to Discord!')
+@client.event
+async def on_message(message):
+    depositlog = client.get_channel(908852595525820426)
+    withdrawlog = client.get_channel(908833848421404673)
+    if message.channel.id == 908856763619606528:
+        if "$tip" in message.content.lower():
+            pog = 146465923803381760
+            mentionedUser= message.mentions[0].id
+            if mentionedUser == pog:
+                text = message.content.split()
+                value = text[2]
+                currency = text[3]
+                if "$" in value:       
+                    value = (re.sub('[a-z$]', '', value))
+                    value = float(value)
+                    if currency == "bnb" or currency == "btc" or currency == "useless":
+                        credits = value * 1000
+                        credits = int(credits) 
+                        await message.channel.send("Thanks, {}. Your deposit request of {} credits will be manually confirmed and credited within 24 hours. PS: If you didn't send anything this deposit will be ignored".format(message.author.mention, credits))
+                        await depositlog.send("{} requested a deposit of {} credits".format(message.author.mention, credits))
+                else:
+                    await message.channel.send("Please use $ when you are tipping to deposit.")
+    if message.channel.id == 908865910218051707:
+        if "$withdraw" in message.content.lower():
+            text = message.content.split()
+            value = text[1]
+            await withdrawlog.send("{} requested a withdraw of {} credits".format(message.author.mention, value))
+            await message.channel.send("Thank you, {}. Your withdraw request of {} credits will be manually confirmed and credited within 24 hours. PS: If you don't have enough this withdraw will be ignored.".format(message.author.mention, value))
+client.run(TOKEN)
+
+from flask import Flask
+app = Flask(__name__)
+@app.route('/')
+def index():
+  return "Bot up and running"
+if __name__ == '__main__':
+  app.run(host="0.0.0.0",debug=True,port=8080)
